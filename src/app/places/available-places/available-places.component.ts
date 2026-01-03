@@ -2,8 +2,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { PlacesContainerComponent } from '../places-container/places-container.component';
 import { PlacesComponent } from '../places.component';
 import { Place } from '../../models/place.model';
-import { HttpClient } from '@angular/common/http';
-import { catchError, map, Observable, Subscription, throwError } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { PlacesService } from '../../services/places.service';
 
 @Component({
   selector: 'app-available-places',
@@ -14,31 +14,15 @@ import { catchError, map, Observable, Subscription, throwError } from 'rxjs';
 export class AvailablePlacesComponent implements OnInit {
   subscription!: Subscription;
   places = signal<Place[] | undefined>(undefined);
-  httpClient = inject(HttpClient);
+  placesService = inject(PlacesService);
   isFetching = signal(false);
   error = signal('');
 
   ngOnInit(): void {
     this.isFetching.set(true);
-    this.subscription = this.httpClient
-      .get<{ places: Place[] }>('http://localhost:3000/places', {
-        // observe: 'response'
-        // observe: 'events'
-      })
-      .pipe(
-        map((resData) => resData.places),
-        catchError((error) => {
-          console.log(error);
-          return throwError(
-            () => new Error('Something went wront. please try later...')
-          )
-        })
-      )
-      .subscribe({
+    this.subscription = this.placesService.loadAvailablePlaces().subscribe({
         next: (places) => {
-          console.log(places);
           this.places.set(places);
-          // this.places.set(response.body?.places)
         },
         error: (err: Error) => {
           console.log(err);
@@ -47,6 +31,15 @@ export class AvailablePlacesComponent implements OnInit {
         complete: () => {
           this.isFetching.set(false);
         },
+      });
+  }
+
+  onSelectPlace(selectedPlace: Place) {
+   this.subscription = this.placesService.addPlaceToUserPlaces(selectedPlace)
+      .subscribe({
+        next: (resData) => {
+          
+        }
       });
   }
 
