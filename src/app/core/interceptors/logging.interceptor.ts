@@ -10,7 +10,7 @@ export const loggingInterceptor: HttpInterceptorFn = (req, next) => {
           console.log('[Incoming Response]');
           console.log(event.status);
           console.log(event.body);
-          console.log(event);
+          // console.log(event);
           
         }
       }
